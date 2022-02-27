@@ -1,0 +1,74 @@
+---
+title: "index"
+author: "Can Aytöre"
+date: "27/02/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# IBB - Acik Veri Portali
+
+
+## İstanbul için İlçelere Göre Mekanik Yıkama Araç Sayıları
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(ggtext)
+library(rnaturalearth)
+```
+
+```{r message=FALSE, warning=FALSE}
+istanbul <- read_sf("data/TUR_adm2.shp") %>%
+  filter(NAME_1 == "Istanbul") %>%
+  st_as_sf() %>%
+  cbind(., st_coordinates(st_centroid(.)))
+```
+
+```{r message=FALSE, warning=FALSE}
+carwash <- read_csv("data/ilcelere-gore-mekanik-ykama-arac-saylar.csv") %>%
+  left_join(istanbul %>% select(NAME_2, geometry), 
+            by = c("ilce" = "NAME_2")) %>%
+  st_as_sf()
+```
+
+```{r message=FALSE, warning=FALSE}
+glimpse(carwash)
+```
+
+```{r message=FALSE, warning=FALSE}
+carwash <- carwash %>%
+  filter(tarih == "2019/01/01")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot() + 
+  geom_sf(data = istanbul, fill = "antiquewhite1", color = "white", size = 0.3) + 
+  geom_sf(data = carwash, aes(fill = cikan_arac_sayisi), shape = ".") +
+  theme_void() +
+  geom_label(data = istanbul, aes(X, Y, label = NAME_2), size = 2, fontface = "bold") +
+  scale_fill_viridis_c(trans = "reverse", alpha = .7) +
+  labs(
+    title = "<span style='color: black; text-align: center;'> İstanbul için İlçelere Göre Mekanik Yıkama Araç Sayıları</span>",
+    caption = "<span style='color: black;'> Made by Can Aytöre <b>&middot;</b> Data from IBB </span>"
+  ) +
+  theme(
+    plot.title = element_markdown(),
+    plot.caption = element_markdown(),
+    text = element_text(family = "Selis")
+  )
+```
+
+
+
+
+
+
+
+
+
+
