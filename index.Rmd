@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## İstanbul için İlçelere Göre Mekanik Yıkama Araç Sayıları
 
+[IBB link here](https://data.ibb.gov.tr/dataset/istanbul-icin-ilcelere-gore-mekanik-yikama-arac-sayilari/resource/e67012a1-89d0-4d20-91f6-69748ce14d28)
+
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(sf)
@@ -64,10 +66,127 @@ ggplot() +
 ```
 
 
+## İstanbul sağlık kurum ve kuruluşlarına (veteriner klinikleri, hastaneler, poliklinikler vb.) Ait bilgiler
+
+[IBB link here](https://data.ibb.gov.tr/dataset/istanbul-saglik-kurum-ve-kuruluslari-verisi/resource/f2154883-68e3-41dc-b2be-a6c2eb721c9e)
+
+```{r message=FALSE, warning=FALSE}
+library(janitor)
+istanbul <- read_sf("data/TUR_adm2.shp") %>%
+  filter(NAME_1 == "Istanbul") %>%
+  st_as_sf() %>%
+  cbind(., st_coordinates(st_centroid(.)))
+```
+
+```{r message=FALSE, warning=FALSE}
+saglik <- read_csv("data/salk-kurum-ve-kurulularna-ait-bilgiler.csv")
+```
+
+```{r message=FALSE, warning=FALSE}
+glimpse(saglik)
+```
+
+```{r message=FALSE, warning=FALSE}
+saglik$X <- saglik$ENLEM
+saglik$Y <- saglik$BOYLAM
+saglik <- st_as_sf(saglik, coords = c("BOYLAM", "ENLEM"), 
+              crs = 4326, agr = "constant") %>%
+  clean_names()
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot() + 
+  geom_sf(data = istanbul, fill = "antiquewhite1", color = "white", size = 0.3) +
+  geom_sf(data = saglik, aes(fill = yatak), shape = ".") +
+  theme_void() +
+  #geom_label(data = saglik, aes(x, y, label = telefon), size = 1, fontface = "bold")  +
+  #coord_sf(xlim = c(29, 30), ylim = c(39, 41), expand = FALSE) + # edit coordinates manually
+  scale_fill_viridis_c(trans = "reverse", alpha = .7) +
+  labs(
+    title = "<span style='color: black; text-align: center;'> İstanbul için İlçelere Göre Mekanik Yıkama Araç Sayıları</span>",
+    caption = "<span style='color: black;'> Made by Can Aytöre <b>&middot;</b> Data from IBB </span>"
+  ) +
+  theme(
+    plot.title = element_markdown(),
+    plot.caption = element_markdown(),
+    text = element_text(family = "Selis")
+  )
+```
+
+
+## İstanbul İçin İlçelere ve Müşteri Tipine Göre Doğalgaz Abone ve Kullanıcı Sayıları
+
+[IBB link here](https://data.ibb.gov.tr/dataset/istanbul-icin-ilcelere-ve-musteri-tipine-gore-dogalgaz-abone-ve-kullanici-sayilari/resource/270430eb-2c6e-4aae-bf8f-0377d7826c9a)
+
+```{r message=FALSE, warning=FALSE}
+istanbul <- read_sf("data/TUR_adm2.shp") %>%
+  filter(NAME_1 == "Istanbul") %>%
+  st_as_sf() %>%
+  cbind(., st_coordinates(st_centroid(.)))
+```
+
+```{r message=FALSE, warning=FALSE}
+gas <- read_csv("data/ilcelere-ve-muteri-tipine-gore-doalgaz-abone-ve-kullanc-saylar.csv") %>%
+  left_join(istanbul %>% select(NAME_2, geometry), 
+            by = c("ilce" = "NAME_2")) %>%
+  st_as_sf()
+```
+
+```{r message=FALSE, warning=FALSE}
+glimpse(gas)
+```
+
+```{r message=FALSE, warning=FALSE}
+gas %>%
+  group_by(musteri_tipi) %>%
+  summarise(n = n(),
+            abone_sayisi = sum(gaz_abone_sayisi),
+            kullanici_sayisi = sum(gaz_kullanici_sayisi)) %>%
+  ungroup()
+```
+
+```{r message=FALSE, warning=FALSE}
+gas_mesken <- gas %>%
+  filter(musteri_tipi == "Mesken")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot() + 
+  geom_sf(data = istanbul, fill = "antiquewhite1", color = "white", size = 0.3) + 
+  geom_sf(data = gas_mesken, aes(fill = gaz_abone_sayisi), shape = ".") +
+  theme_void() +
+  geom_label(data = istanbul, aes(X, Y, label = NAME_2), size = 2, fontface = "bold") +
+  scale_fill_viridis_c(trans = "reverse", alpha = .7) +
+  labs(
+    title = "<span style='color: black; text-align: center;'> İstanbul İlçelerine Göre 'Mesken' Tipi Müşteri İçin Doğalgaz Abone Sayıları </span>",
+    caption = "<span style='color: black;'> Made by Can Aytöre <b>&middot;</b> Data from IBB </span>"
+  ) +
+  theme(
+    plot.title = element_markdown(),
+    plot.caption = element_markdown(),
+    text = element_text(family = "Selis")
+  )
+```
 
 
 
+## 2021 Yılı Raylı Ulaşım Hatları Vektör Verisi
 
+[IBB link here](https://data.ibb.gov.tr/dataset/rayli-ulasim-hatlari-vektor-verisi/resource/fe4ec165-9d11-4b83-b031-caea3cfaae55)
+
+```{r message=FALSE, warning=FALSE}
+istanbul <- read_sf("data/TUR_adm2.shp") %>%
+  filter(NAME_1 == "Istanbul") %>%
+  st_as_sf() %>%
+  cbind(., st_coordinates(st_centroid(.)))
+```
+
+```{r message=FALSE, warning=FALSE}
+#trasportation <- read_table("data/2021-yl-rayl-ulam-hatlar-vektor-verisi.csv", sep = ";") %>%
+#  st_as_sf()
+```
 
 
 
